@@ -10,6 +10,14 @@ deny[msg] {
     msg := sprintf("invalid ingress host %q", [host])
 }
 
+deny[msg] {
+    input.request.kind.kind = "Ingress"
+    input.request.operation = "UPDATE"
+    host = input.request.object.spec.rules[_].host
+    not fqdn_matches_any(host, valid_ingress_hosts)
+    msg = sprintf("ingress host not allowed: %q", [host])
+}
+
 valid_ingress_hosts = {host |
     whitelist := namespaces[input.request.namespace].metadata.annotations["ingress-whitelist"]
     hosts := split(whitelist, ",")
